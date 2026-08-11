@@ -1,33 +1,10 @@
 'use client'
-
 import { useEffect, useState } from 'react'
-
-const fallbackBanners = [
-  { id: 1, title: 'Ofertas especiais', text: 'Encontre seus produtos favoritos', className: 'bannerOne' },
-  { id: 2, title: 'Novidades na loja', text: 'Confira os lançamentos', className: 'bannerTwo' },
-  { id: 3, title: 'Pague com PIX', text: 'Compra rápida e prática', className: 'bannerThree' },
-]
-const fallbackProducts = [
-  { id: 1, name: 'Camiseta Premium', price: 59.9, category: 'Roupas', emoji: '👕' },
-  { id: 2, name: 'Boné Casual', price: 39.9, category: 'Acessórios', emoji: '🧢' },
-  { id: 3, name: 'Óculos de Sol', price: 79.9, category: 'Acessórios', emoji: '🕶️' },
-]
-
-export default function Home() {
-  const [banner, setBanner] = useState(0)
-  const [search, setSearch] = useState('')
-  const [banners, setBanners] = useState(fallbackBanners)
-  const [products, setProducts] = useState(fallbackProducts)
-  useEffect(() => { fetch('/api/banners').then(r => r.json()).then(data => data.length && setBanners(data.map((b: typeof fallbackBanners[number], i: number) => ({...b, className: `banner${i % 3 === 0 ? 'One' : i % 3 === 1 ? 'Two' : 'Three'}`}))).catch(()=>{}); fetch('/api/products').then(r=>r.json()).then(data=>data.length && setProducts(data.map((p: typeof fallbackProducts[number]) => ({...p, emoji: '🛍️'}))).catch(()=>{}) }, [])
-  useEffect(() => { if (banners.length > 1) { const timer = setInterval(() => setBanner(i => (i + 1) % banners.length), 5000); return () => clearInterval(timer) } }, [banners.length])
-  const filtered = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
-  return <main>
-    <header className="header"><div className="headerInner"><a className="logo" href="#">Market<span>PIX</span></a><div className="searchBox"><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar produtos..."/><button aria-label="Buscar">🔍</button></div><button className="cart">🛒 Carrinho <b>0</b></button></div></header>
-    <nav className="nav"><div className="container"><a href="#produtos">Produtos</a><a href="#categorias">Categorias</a><a href="#ofertas">Ofertas</a><a href="#contato">Contato</a><a href="/admin">Administração</a></div></nav>
-    <section className={`banner ${banners[banner]?.className || 'bannerOne'}`}><div className="bannerContent"><small>MARKETPIX</small><h1>{banners[banner]?.title}</h1><p>{banners[banner]?.text}</p><button className="primary">Comprar agora</button></div><div className="dots">{banners.map((_,i)=><button key={i} className={i===banner?'dot active':'dot'} onClick={()=>setBanner(i)} aria-label={`Banner ${i+1}`}/>)}</div></section>
-    <section id="categorias" className="container section"><h2>Categorias</h2><div className="categories"><div>👕<span>Roupas</span></div><div>🧢<span>Acessórios</span></div><div>👟<span>Calçados</span></div><div>🏠<span>Casa</span></div></div></section>
-    <section id="produtos" className="container section"><div className="sectionTitle"><h2>Produtos em destaque</h2><a href="#produtos">Ver todos →</a></div><div className="products">{filtered.map(p=><article className="product" key={p.id}><div className="productImage">{p.emoji}</div><div className="productInfo"><small>{p.category}</small><h3>{p.name}</h3><strong>R$ {p.price.toFixed(2).replace('.',',')}</strong><button className="buy">Adicionar ao carrinho</button></div></article>)}</div>{!filtered.length&&<p>Nenhum produto encontrado.</p>}</section>
-    <section id="ofertas" className="offer"><div className="container"><h2>Pagamento fácil com PIX</h2><p>Finalize suas compras de forma rápida e segura.</p></div></section>
-    <footer id="contato"><div className="container"><div><a className="logo" href="#">Market<span>PIX</span></a><p>Sua loja online.</p></div><div><h3>Atendimento</h3><p>WhatsApp: (00) 00000-0000</p></div></div></footer>
-  </main>
-}
+const fallbackBanners=[{id:1,title:'Ofertas especiais',text:'Encontre seus produtos favoritos',className:'bannerOne'},{id:2,title:'Novidades na loja',text:'Confira os lançamentos',className:'bannerTwo'},{id:3,title:'Pague com PIX',text:'Compra rápida e prática',className:'bannerThree'}]
+const fallbackProducts=[{id:1,name:'Camiseta Premium',price:59.9,category:'Roupas',emoji:'👕'},{id:2,name:'Boné Casual',price:39.9,category:'Acessórios',emoji:'🧢'},{id:3,name:'Óculos de Sol',price:79.9,category:'Acessórios',emoji:'🕶️'}]
+type Product=typeof fallbackProducts[number]
+export default function Home(){const[banner,setBanner]=useState(0);const[search,setSearch]=useState('');const[banners,setBanners]=useState(fallbackBanners);const[products,setProducts]=useState<Product[]>(fallbackProducts);const[cartCount,setCartCount]=useState(0)
+useEffect(()=>{fetch('/api/banners').then(r=>r.json()).then(data=>data.length&&setBanners(data.map((b:typeof fallbackBanners[number],i:number)=>({...b,className:`banner${i%3===0?'One':i%3===1?'Two':'Three'}`}))).catch(()=>{});fetch('/api/products').then(r=>r.json()).then(data=>data.length&&setProducts(data.map((p:Product)=>({...p,emoji:'🛍️'}))).catch(()=>{});try{const c=JSON.parse(localStorage.getItem('marketpix-cart')||'[]');setCartCount(c.reduce((s:{x:number},i:{qty:number})=>s.x+i.qty,{x:0}).x)}catch{}},[])
+useEffect(()=>{if(banners.length>1){const t=setInterval(()=>setBanner(i=>(i+1)%banners.length),5000);return()=>clearInterval(t)}},[banners.length])
+function add(p:Product){try{const c=JSON.parse(localStorage.getItem('marketpix-cart')||'[]');const i=c.findIndex((x:Product)=>x.id===p.id);if(i>=0)c[i].qty++;else c.push({id:p.id,name:p.name,price:p.price,qty:1});localStorage.setItem('marketpix-cart',JSON.stringify(c));setCartCount(c.reduce((s:number,x:{qty:number})=>s+x.qty,0));alert('Produto adicionado ao carrinho!')}catch{}}
+const filtered=products.filter(p=>p.name.toLowerCase().includes(search.toLowerCase()));return <main><header className="header"><div className="headerInner"><a className="logo" href="#">Market<span>PIX</span></a><div className="searchBox"><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar produtos..."/><button aria-label="Buscar">🔍</button></div><a className="cart" href="/checkout">🛒 Carrinho <b>{cartCount}</b></a></div></header><nav className="nav"><div className="container"><a href="#produtos">Produtos</a><a href="#categorias">Categorias</a><a href="#ofertas">Ofertas</a><a href="#contato">Contato</a><a href="/admin">Administração</a></div></nav><section className={`banner ${banners[banner]?.className||'bannerOne'}`}><div className="bannerContent"><small>MARKETPIX</small><h1>{banners[banner]?.title}</h1><p>{banners[banner]?.text}</p><a className="primary" href="#produtos">Comprar agora</a></div><div className="dots">{banners.map((_,i)=><button key={i} className={i===banner?'dot active':'dot'} onClick={()=>setBanner(i)} aria-label={`Banner ${i+1}`}/>)}</div></section><section id="categorias" className="container section"><h2>Categorias</h2><div className="categories"><div>👕<span>Roupas</span></div><div>🧢<span>Acessórios</span></div><div>👟<span>Calçados</span></div><div>🏠<span>Casa</span></div></div></section><section id="produtos" className="container section"><div className="sectionTitle"><h2>Produtos em destaque</h2></div><div className="products">{filtered.map(p=><article className="product" key={p.id}><div className="productImage">{p.emoji}</div><div className="productInfo"><small>{p.category}</small><h3>{p.name}</h3><strong>R$ {p.price.toFixed(2).replace('.',',')}</strong><button className="buy" onClick={()=>add(p)}>Adicionar ao carrinho</button></div></article>)}</div>{!filtered.length&&<p>Nenhum produto encontrado.</p>}</section><section id="ofertas" className="offer"><div className="container"><h2>Pagamento fácil com PIX</h2><p>Finalize suas compras de forma rápida e segura.</p></div></section><footer id="contato"><div className="container"><div><a className="logo" href="#">Market<span>PIX</span></a><p>Sua loja online.</p></div><div><h3>Atendimento</h3><p>WhatsApp: (00) 00000-0000</p></div></div></footer></main>}
